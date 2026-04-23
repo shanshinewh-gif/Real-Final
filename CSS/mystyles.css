@@ -1,0 +1,36 @@
+/* Custom CSS from Scratch */
+
+body {
+    background-color: #f0f4f8; /* Custom background color */
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; /* Font family */
+    color: #333; /* Font color */
+    line-height: 1.6;
+    margin: 40px;
+}
+
+#header-section {
+    background-image: linear-gradient(to right, #2c3e50, #000000);
+    color: rgb(243, 237, 237);
+    padding: 20px;
+    text-align: center;
+    border-radius: 8px;
+}
+
+#content-box {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: white;
+    border: 1px solid #ddd;
+}
+
+#tableau-section {
+    margin-top: 30px;
+    padding: 15px;
+    background-color: #e8eef3;
+}
+
+nav a {
+    color: #2980b9;
+    text-decoration: none;
+    font-weight: bold;
+}

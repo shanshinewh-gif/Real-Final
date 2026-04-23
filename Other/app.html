@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pattern Match</title>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1f3a93, #4b77be);
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .app-shell {
+            width: min(1100px, 100%);
+            padding: 20px;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+            padding: 30px;
+        }
+
+        .game-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .game-header h1 {
+            margin: 0;
+            font-size: 2.4rem;
+        }
+
+        .game-header p {
+            margin: 0;
+            opacity: 0.9;
+        }
+
+        .words-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(120px, 1fr));
+            gap: 14px;
+            margin: 25px 0;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+            user-select: none;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255, 255, 255, 0.35);
+        }
+
+        .card.selected {
+            border-color: #f7b731;
+            background: rgba(247, 183, 49, 0.18);
+        }
+
+        .card.solved {
+            background: rgba(40, 180, 150, 0.24);
+            border-color: #27ae60;
+            color: #e0f7f1;
+            cursor: default;
+        }
+
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(160px, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .category {
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.18);
+            border-radius: 16px;
+            padding: 18px;
+            text-align: center;
+            transition: border-color 0.2s ease, background 0.2s ease;
+            cursor: pointer;
+            min-height: 110px;
+        }
+
+        .category.solved {
+            border-color: #2ecc71;
+            background: rgba(46, 204, 113, 0.16);
+        }
+
+        .category h2 {
+            margin: 0 0 10px;
+            font-size: 1rem;
+        }
+
+        .category span {
+            display: block;
+            font-size: 0.95rem;
+            opacity: 0.85;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .controls button {
+            border: none;
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            background: #f8f9fa;
+            color: #1a1a1a;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .controls button:hover {
+            transform: translateY(-2px);
+        }
+
+        .feedback {
+            min-height: 1.4rem;
+            margin-top: 10px;
+            font-size: 1.05rem;
+            letter-spacing: 0.02em;
+        }
+
+        .feedback.success {
+            color: #2ecc71;
+        }
+
+        .feedback.error {
+            color: #ff6b6b;
+        }
+
+        .footer-link {
+            margin-top: 18px;
+            display: inline-block;
+            color: rgba(255,255,255,0.85);
+            text-decoration: none;
+        }
+
+        .footer-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 720px) {
+            .words-grid,
+            .categories {
+                grid-template-columns: repeat(2, minmax(120px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-shell">
+        <div class="game-card">
+            <div class="game-header">
+                <div>
+                    <h1>Connections Game</h1>
+                    <p>Select 4 words and assign them to the correct category.</p>
+                </div>
+                <div class="controls">
+                    <button id="resetButton">Reset Puzzle</button>
+                    <button id="clearButton">Clear Selection</button>
+                </div>
+            </div>
+
+            <div class="categories" id="categoryContainer"></div>
+            <div class="words-grid" id="wordsGrid"></div>
+
+            <div class="feedback" id="feedback"></div>
+            <a class="footer-link" href="../index.html">← Back to Main Page</a>
+        </div>
+    </div>
+
+    <script>
+        const categoryPool = [
+            { name: 'Planets', words: ['Mars', 'Venus', 'Jupiter', 'Saturn'] },
+            { name: 'Instruments', words: ['Piano', 'Guitar', 'Drums', 'Violin'] },
+            { name: 'Vegetables', words: ['Carrot', 'Potato', 'Broccoli', 'Spinach'] },
+            { name: 'Wild Animals', words: ['Lion', 'Tiger', 'Elephant', 'Giraffe'] },
+            { name: 'Sports', words: ['Soccer', 'Tennis', 'Baseball', 'Basketball'] },
+            { name: 'Colors', words: ['Red', 'Blue', 'Green', 'Yellow'] },
+            { name: 'Fruits', words: ['Apple', 'Banana', 'Cherry', 'Orange'] },
+            { name: 'Tools', words: ['Hammer', 'Wrench', 'Screwdriver', 'Saw'] }
+        ];
+
+        const puzzle = {
+            categories: []
+        };
+
+        const wordStates = [];
+        let selectedWords = [];
+        let solvedCategories = 0;
+
+        const wordsGrid = document.getElementById('wordsGrid');
+        const categoryContainer = document.getElementById('categoryContainer');
+        const feedback = document.getElementById('feedback');
+        const resetButton = document.getElementById('resetButton');
+        const clearButton = document.getElementById('clearButton');
+
+        function getRandomCategories(count) {
+            return [...categoryPool].sort(() => Math.random() - 0.5).slice(0, count);
+        }
+
+        function initGame() {
+            selectedWords = [];
+            solvedCategories = 0;
+            puzzle.categories = getRandomCategories(4);
+            feedback.textContent = 'Choose 4 words, then assign them to a category.';
+            feedback.className = 'feedback';
+
+            const allWords = puzzle.categories.flatMap(cat => cat.words);
+            const shuffledWords = [...allWords].sort(() => Math.random() - 0.5);
+
+            wordsGrid.innerHTML = '';
+            categoryContainer.innerHTML = '';
+            wordStates.length = 0;
+
+            shuffledWords.forEach((word, index) => {
+                const wordElement = document.createElement('button');
+                wordElement.type = 'button';
+                wordElement.className = 'card';
+                wordElement.textContent = word;
+                wordElement.dataset.word = word;
+                wordElement.dataset.index = index;
+                wordElement.addEventListener('click', () => toggleWordSelection(index));
+                wordsGrid.appendChild(wordElement);
+                wordStates.push({ word, solved: false, selected: false });
+            });
+
+            puzzle.categories.forEach((category, index) => {
+                const categoryElement = document.createElement('div');
+                categoryElement.className = 'category';
+                categoryElement.id = `category-${index}`;
+                categoryElement.innerHTML = `<h2>${category.name}</h2><span>Choose 4 words</span>`;
+                categoryElement.addEventListener('click', () => assignCategory(index));
+                categoryContainer.appendChild(categoryElement);
+            });
+        }
+
+        function toggleWordSelection(index) {
+            const state = wordStates[index];
+            if (state.solved) return;
+            state.selected = !state.selected;
+            selectedWords = wordStates.filter(item => item.selected).map(item => item.word);
+            updateWordCards();
+            feedback.textContent = selectedWords.length === 0 ? 'Choose 4 words, then assign them to a category.' : `${selectedWords.length} selected.`;
+            feedback.className = 'feedback';
+        }
+
+        function updateWordCards() {
+            const cards = wordsGrid.querySelectorAll('.card');
+            cards.forEach(card => {
+                const idx = Number(card.dataset.index);
+                if (wordStates[idx].solved) {
+                    card.classList.add('solved');
+                    card.classList.remove('selected');
+                } else {
+                    card.classList.toggle('selected', wordStates[idx].selected);
+                }
+            });
+        }
+
+        function assignCategory(categoryIndex) {
+            if (selectedWords.length !== 4) {
+                feedback.textContent = 'Select exactly 4 words before assigning a category.';
+                feedback.className = 'feedback error';
+                return;
+            }
+
+            const category = puzzle.categories[categoryIndex];
+            const isCorrect = selectedWords.every(word => category.words.includes(word));
+            const categoryElement = document.getElementById(`category-${categoryIndex}`);
+
+            if (categoryElement.classList.contains('solved')) {
+                feedback.textContent = 'This category is already solved.';
+                feedback.className = 'feedback error';
+                return;
+            }
+
+            if (isCorrect) {
+                categoryElement.classList.add('solved');
+                categoryElement.querySelector('span').textContent = 'Solved!';
+                selectedWords.forEach(word => {
+                    const state = wordStates.find(item => item.word === word);
+                    if (state) {
+                        state.solved = true;
+                        state.selected = false;
+                    }
+                });
+                solvedCategories += 1;
+                selectedWords = [];
+                updateWordCards();
+                feedback.textContent = 'Great job! That group is correct.';
+                feedback.className = 'feedback success';
+            } else {
+                selectedWords.forEach(word => {
+                    const state = wordStates.find(item => item.word === word);
+                    if (state) state.selected = false;
+                });
+                selectedWords = [];
+                updateWordCards();
+                feedback.textContent = 'Not quite. Try a different combination.';
+                feedback.className = 'feedback error';
+            }
+
+            if (solvedCategories === puzzle.categories.length) {
+                feedback.textContent = '🎉 You solved all 4 categories!';
+                feedback.className = 'feedback success';
+            }
+        }
+
+        resetButton.addEventListener('click', initGame);
+        clearButton.addEventListener('click', () => {
+            selectedWords.forEach(word => {
+                const state = wordStates.find(item => item.word === word);
+                if (state) state.selected = false;
+            });
+            selectedWords = [];
+            updateWordCards();
+            feedback.textContent = 'Selection cleared. Pick 4 words again.';
+            feedback.className = 'feedback';
+        });
+
+        initGame();
+    </script>
+</body>
+</html>
